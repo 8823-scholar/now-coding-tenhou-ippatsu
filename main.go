@@ -21,11 +21,19 @@ func main() {
 		for _, log := range logs {
 			paifu := get_paifu(log)
 			fmt.Println(paifu)
+			reaches := get_reaches_from_paifu(paifu)
+			fmt.Println(reaches)
 			break
 		}
 		fmt.Println(logs)
 		break
 	}
+}
+
+func get_reaches_from_paifu(paifu string) int {
+	r := regexp.MustCompile(`REACH[^>]*?step="2"/>`)
+	matches := r.FindAllString(paifu, -1)
+	return len(matches)
 }
 
 func get_paifu(id string) string {
