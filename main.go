@@ -17,9 +17,30 @@ func main() {
 	for _, file := range files {
 		html := get_html_by_file(file)
 		logs := get_logs_from_html(html)
+
+		for _, log := range logs {
+			paifu := get_paifu(log)
+			fmt.Println(paifu)
+			break
+		}
 		fmt.Println(logs)
 		break
 	}
+}
+
+func get_paifu(id string) string {
+	url := "https://tenhou.net/0/log/?" + id
+	res, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return string(body)
 }
 
 func get_logs_from_html(html *goquery.Document) []string {
