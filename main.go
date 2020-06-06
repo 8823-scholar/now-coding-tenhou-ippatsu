@@ -24,7 +24,7 @@ func get_log_list() []string {
 		log.Fatal(err)
 	}
 
-	r := regexp.MustCompile(`\w+\.log\.gz`)
+	r := regexp.MustCompile(`\w+\.html\.gz`)
 	names := []string{}
 	for _, matches := range r.FindAllStringSubmatch(string(body), -1) {
 		names = append(names, matches[0])
