@@ -12,17 +12,35 @@ import (
 )
 
 func main() {
-	names := get_log_list()
+	files := get_file_list()
 
-	for _, name := range names {
-		html := get_html_by_log_name(name)
-		fmt.Println(html)
+	for _, file := range files {
+		html := get_html_by_file(file)
+		logs := get_logs_from_html(html)
+		fmt.Println(logs)
 		break
 	}
 }
 
-func get_html_by_log_name(name string) string {
-	url := "https://tenhou.net/sc/raw/dat/" + name
+func get_logs_from_html(html *goquery.Document) []string {
+	logs := []string{}
+
+	html.Find("a").Each(func(i int, s *goquery.Selection) {
+		href, exists := s.Attr("href")
+		if exists {
+			r := regexp.MustCompile(`log=([\w\-]+)`)
+			matches := r.FindStringSubmatch(href)
+			if len(matches) > 0 {
+				logs = append(logs, matches[1])
+			}
+		}
+	})
+
+	return logs
+}
+
+func get_html_by_file(file string) *goquery.Document {
+	url := "https://tenhou.net/sc/raw/dat/" + file
 	res, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
@@ -38,15 +56,10 @@ func get_html_by_log_name(name string) string {
 		log.Fatal(err)
 	}
 
-	html, err := doc.Html()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return html
+	return doc
 }
 
-func get_log_list() []string {
+func get_file_list() []string {
 	res, err := http.Get("https://tenhou.net/sc/raw/list.cgi")
 	if err != nil {
 		log.Fatal(err)
@@ -58,10 +71,10 @@ func get_log_list() []string {
 	}
 
 	r := regexp.MustCompile(`\w+\.html\.gz`)
-	names := []string{}
+	files := []string{}
 	for _, matches := range r.FindAllStringSubmatch(string(body), -1) {
-		names = append(names, matches[0])
+		files = append(files, matches[0])
 	}
 
-	return names
+	return files
 }
