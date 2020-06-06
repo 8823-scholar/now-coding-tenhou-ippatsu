@@ -1,16 +1,49 @@
 package main
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"regexp"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 func main() {
 	names := get_log_list()
-	fmt.Println(names)
+
+	for _, name := range names {
+		html := get_html_by_log_name(name)
+		fmt.Println(html)
+		break
+	}
+}
+
+func get_html_by_log_name(name string) string {
+	url := "https://tenhou.net/sc/raw/dat/" + name
+	res, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	reader, err := gzip.NewReader(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	doc, err := goquery.NewDocumentFromReader(reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	html, err := doc.Html()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return html
 }
 
 func get_log_list() []string {
