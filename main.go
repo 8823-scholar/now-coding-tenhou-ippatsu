@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -14,20 +15,47 @@ import (
 func main() {
 	files := get_file_list()
 
+	reaches_count := 0
+	ippatsu_count := 0
 	for _, file := range files {
 		html := get_html_by_file(file)
 		logs := get_logs_from_html(html)
 
 		for _, log := range logs {
+			fmt.Printf("%s analyzing...\n", log)
 			paifu := get_paifu(log)
-			fmt.Println(paifu)
-			reaches := get_reaches_from_paifu(paifu)
-			fmt.Println(reaches)
-			break
+			reaches_count += get_reaches_from_paifu(paifu)
+			ippatsu_count += get_ippatsu_from_paifu(paifu)
 		}
-		fmt.Println(logs)
-		break
 	}
+
+	fmt.Printf("リーチ: %d回\n", reaches_count)
+	fmt.Printf("一発 %d回\n", ippatsu_count)
+}
+
+func get_ippatsu_from_paifu(paifu string) int {
+	count := 0
+	r := regexp.MustCompile(`<AGARI[^>]*? yaku="([\d,]+)"`)
+	for _, matches := range r.FindAllStringSubmatch(paifu, -1) {
+		if len(matches) > 0 {
+			ippatsu := false
+			tsumo := false
+			for i, yaku := range strings.Split(matches[1], ",") {
+				if i%2 == 0 && yaku == "0" {
+					tsumo = true
+				}
+				if i%2 == 0 && yaku == "2" {
+					ippatsu = true
+				}
+			}
+
+			if ippatsu && tsumo {
+				count += 1
+			}
+		}
+	}
+
+	return count
 }
 
 func get_reaches_from_paifu(paifu string) int {
